@@ -1,0 +1,193 @@
+battery-lab test report
+generated_utc: 2026-11-24T01:32:42Z
+base_commit: 449b2bc
+python: 3.14.3
+pytest: 9.2.0
+hypothesis_seed: 2026
+exit_code: 0
+
+============================= test session starts ==============================
+collecting ... collected 155 items
+
+tests/test_cli.py::test_collect_appends_one_row_per_battery PASSED       [  0%]
+tests/test_cli.py::test_collect_without_battery_fails_and_writes_nothing PASSED [  1%]
+tests/test_cli.py::test_collect_reports_storage_errors PASSED            [  1%]
+tests/test_cli.py::test_json_prints_records_in_schema_order PASSED       [  2%]
+tests/test_cli.py::test_show_renders_health_status_and_temperature PASSED [  3%]
+tests/test_cli.py::test_show_without_samples_fails PASSED                [  3%]
+tests/test_cli.py::test_a_subcommand_is_required PASSED                  [  4%]
+tests/test_cli.py::test_format_duration[59-59s] PASSED                   [  5%]
+tests/test_cli.py::test_format_duration[60-1m] PASSED                    [  5%]
+tests/test_cli.py::test_format_duration[10920-3h 02m] PASSED             [  6%]
+tests/test_cli.py::test_format_duration[176400-2d 01h 00m] PASSED        [  7%]
+tests/test_cli.py::test_default_home_is_the_checkout_when_running_from_source PASSED [  7%]
+tests/test_cli.py::test_shim_maps_legacy_flags_to_subcommands PASSED     [  8%]
+tests/test_cli.py::test_shim_runs_as_a_script_from_another_directory PASSED [  9%]
+tests/test_cli.py::test_python_dash_m_entry_point PASSED                 [  9%]
+tests/test_readers.py::test_parse_uevent_strips_prefix_and_lowercases_keys PASSED [ 10%]
+tests/test_readers.py::test_dell_reports_charge_fields_and_null_cycle_count PASSED [ 10%]
+tests/test_readers.py::test_only_bat_entries_are_sampled PASSED          [ 11%]
+tests/test_readers.py::test_energy_vendor_health_comes_from_energy_fields PASSED [ 12%]
+tests/test_readers.py::test_two_batteries_produce_one_row_each_with_shared_context PASSED [ 12%]
+tests/test_readers.py::test_machine_without_battery_yields_no_samples PASSED [ 13%]
+tests/test_readers.py::test_malformed_uevent_never_raises_and_nulls_bad_values PASSED [ 14%]
+tests/test_readers.py::test_battery_directory_without_uevent_is_all_null PASSED [ 14%]
+tests/test_readers.py::test_missing_sysfs_tree_yields_nothing PASSED     [ 15%]
+tests/test_readers.py::test_thermal_uses_highest_readable_zone PASSED    [ 16%]
+tests/test_readers.py::test_thermal_ignores_implausible_readings PASSED  [ 16%]
+tests/test_readers.py::test_thermal_keeps_millidegree_precision PASSED   [ 17%]
+tests/test_readers.py::test_env_machine_id_takes_precedence PASSED       [ 18%]
+tests/test_readers.py::test_empty_or_missing_env_falls_back_to_dmi PASSED [ 18%]
+tests/test_readers.py::test_dmi_without_sku_uses_product_name_alone PASSED [ 19%]
+tests/test_readers.py::test_product_serial_is_never_read PASSED          [ 20%]
+tests/test_readers.py::test_sysfs_paths_appear_only_as_default_arguments PASSED [ 20%]
+tests/test_robust.py::test_fenwick_s_matches_brute_force PASSED          [ 21%]
+tests/test_robust.py::test_s_is_antisymmetric_under_negation PASSED      [ 21%]
+tests/test_robust.py::test_s_is_invariant_under_monotone_transform PASSED [ 22%]
+tests/test_robust.py::test_average_ranks_sum_is_preserved PASSED         [ 23%]
+tests/test_robust.py::test_sen_slope_matches_reference_median PASSED     [ 23%]
+tests/test_robust.py::test_sen_slope_recovers_exact_line PASSED          [ 24%]
+tests/test_robust.py::test_interval_contains_the_estimate PASSED         [ 25%]
+tests/test_robust.py::test_wider_confidence_never_narrows_the_interval PASSED [ 25%]
+tests/test_robust.py::test_p_value_is_a_probability_and_inflation_is_conservative PASSED [ 26%]
+tests/test_robust.py::test_tie_corrected_variance_reference_value PASSED [ 27%]
+tests/test_robust.py::test_mann_kendall_reference_values PASSED          [ 27%]
+tests/test_robust.py::test_constant_series_has_no_trend PASSED           [ 28%]
+tests/test_robust.py::test_rejects_unsorted_times PASSED                 [ 29%]
+tests/test_robust.py::test_rejects_mismatched_lengths PASSED             [ 29%]
+tests/test_robust.py::test_order_statistic_interpolates_and_clamps PASSED [ 30%]
+tests/test_robust.py::test_pair_sampling_is_reproducible_and_bounded PASSED [ 30%]
+tests/test_robust.py::test_sampled_slope_is_close_to_exact PASSED        [ 31%]
+tests/test_robust.py::test_false_positive_rate_on_white_noise_is_near_nominal PASSED [ 32%]
+tests/test_robust.py::test_interval_coverage_on_linear_signal_is_near_nominal PASSED [ 32%]
+tests/test_robust.py::test_autocorrelation_correction_reduces_false_positives PASSED [ 33%]
+tests/test_robust.py::test_inflation_exceeds_one_for_strong_autocorrelation PASSED [ 34%]
+tests/test_schema.py::test_schema_is_idempotent PASSED                   [ 34%]
+tests/test_schema.py::test_view_columns_match_the_record_contract PASSED [ 35%]
+tests/test_schema.py::test_view_computes_health_like_the_model[columns0-83.64] PASSED [ 36%]
+tests/test_schema.py::test_view_computes_health_like_the_model[columns1-90.0] PASSED [ 36%]
+tests/test_schema.py::test_view_computes_health_like_the_model[columns2-None] PASSED [ 37%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns0] PASSED [ 38%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns1] PASSED [ 38%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns2] PASSED [ 39%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns3] PASSED [ 40%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns4] PASSED [ 40%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns5] PASSED [ 41%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns6] PASSED [ 41%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns7] PASSED [ 42%]
+tests/test_schema.py::test_constraints_reject_invalid_rows[columns8] PASSED [ 43%]
+tests/test_schema.py::test_duplicate_sample_is_rejected PASSED           [ 43%]
+tests/test_schema.py::test_parameterized_insert_stores_hostile_text_literally PASSED [ 44%]
+tests/test_schema.py::test_package_and_project_versions_agree PASSED     [ 45%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[=1+1] PASSED [ 45%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[+1] PASSED [ 46%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[-1] PASSED [ 47%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[@SUM(A1)] PASSED [ 47%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[\tx] PASSED [ 48%]
+tests/test_security.py::test_formula_cells_are_neutralized_on_disk_and_restored[\rx] PASSED [ 49%]
+tests/test_security.py::test_negative_numeric_cells_are_not_escaped PASSED [ 49%]
+tests/test_security.py::test_cell_escaping_round_trips PASSED            [ 50%]
+tests/test_security.py::test_text_fields_round_trip_through_csv PASSED   [ 50%]
+tests/test_security.py::test_new_log_is_private_to_the_user PASSED       [ 51%]
+tests/test_security.py::test_migration_keeps_existing_permissions_and_leaves_no_staging_file PASSED [ 52%]
+tests/test_security.py::test_migration_does_not_follow_a_planted_staging_symlink PASSED [ 52%]
+tests/test_security.py::test_truncated_final_row_does_not_corrupt_the_next_append PASSED [ 53%]
+tests/test_security.py::test_concurrent_appends_keep_one_header_and_every_row PASSED [ 54%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[\x1b[2J] PASSED [ 54%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[\x1b]0;title\x07] PASSED [ 55%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[a\x08b] PASSED [ 56%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[right\u202eleft] PASSED [ 56%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[zero\u200bwidth] PASSED [ 57%]
+tests/test_security.py::test_control_and_format_characters_are_removed_from_terminal_output[line\nbreak] PASSED [ 58%]
+tests/test_security.py::test_show_and_collect_output_cannot_carry_escape_sequences PASSED [ 58%]
+tests/test_security.py::test_oversized_integer_in_uevent_does_not_crash PASSED [ 59%]
+tests/test_security.py::test_attribute_reads_are_bounded PASSED          [ 60%]
+tests/test_security.py::test_deeply_nested_extra_is_ignored PASSED       [ 60%]
+tests/test_security.py::test_extreme_timestamps_never_raise[0001-01-01T00:00:00] PASSED [ 61%]
+tests/test_security.py::test_extreme_timestamps_never_raise[9999-12-31T23:59:59] PASSED [ 61%]
+tests/test_security.py::test_extreme_timestamps_never_raise[garbage] PASSED [ 62%]
+tests/test_security.py::test_extreme_timestamps_never_raise[] PASSED     [ 63%]
+tests/test_security.py::test_extreme_timestamps_never_raise[None] PASSED [ 63%]
+tests/test_security.py::test_unreadable_log_is_a_clean_error[invalid-utf8] PASSED [ 64%]
+tests/test_security.py::test_unreadable_log_is_a_clean_error[oversized-field] PASSED [ 65%]
+tests/test_security.py::test_append_to_a_directory_is_a_clean_error PASSED [ 65%]
+tests/test_security.py::test_serial_from_dmi_is_absent_from_records PASSED [ 66%]
+tests/test_storage.py::test_sample_fields_follow_the_record_schema PASSED [ 67%]
+tests/test_storage.py::test_csv_store_satisfies_the_sample_store_interface PASSED [ 67%]
+tests/test_storage.py::test_append_writes_header_once_and_round_trips PASSED [ 68%]
+tests/test_storage.py::test_nulls_are_written_as_empty_cells PASSED      [ 69%]
+tests/test_storage.py::test_empty_file_is_treated_as_new PASSED          [ 69%]
+tests/test_storage.py::test_legacy_header_is_migrated_in_place PASSED    [ 70%]
+tests/test_storage.py::test_unrecognized_csv_is_refused_and_left_untouched[unknown-column] PASSED [ 70%]
+tests/test_storage.py::test_unrecognized_csv_is_refused_and_left_untouched[ragged-row] PASSED [ 71%]
+tests/test_storage.py::test_unrecognized_csv_is_refused_and_left_untouched[duplicate-column] PASSED [ 72%]
+tests/test_storage.py::test_load_missing_file_is_empty PASSED            [ 72%]
+tests/test_storage.py::test_load_skips_bad_timestamps_and_nulls_bad_cells PASSED [ 73%]
+tests/test_storage.py::test_fixture_machines_round_trip_through_csv[dell_latitude_3410] PASSED [ 74%]
+tests/test_storage.py::test_fixture_machines_round_trip_through_csv[hp_elitebook_840_energy] PASSED [ 74%]
+tests/test_storage.py::test_fixture_machines_round_trip_through_csv[lenovo_thinkpad_t480_dual] PASSED [ 75%]
+tests/test_storage.py::test_fixture_machines_round_trip_through_csv[asus_zenbook_malformed] PASSED [ 76%]
+tests/test_summary.py::test_health_delta_spans_first_and_last_measured_samples PASSED [ 76%]
+tests/test_summary.py::test_health_delta_orders_by_time PASSED           [ 77%]
+tests/test_summary.py::test_health_delta_is_none_without_capacity_readings PASSED [ 78%]
+tests/test_summary.py::test_interval_is_credited_to_the_earlier_status PASSED [ 78%]
+tests/test_summary.py::test_long_interval_becomes_a_gap_instead_of_status_time PASSED [ 79%]
+tests/test_summary.py::test_status_change_across_a_gap_is_not_counted PASSED [ 80%]
+tests/test_summary.py::test_gap_limit_is_factor_times_median_of_positive_intervals PASSED [ 80%]
+tests/test_summary.py::test_single_sample_and_duplicate_timestamps_track_nothing PASSED [ 81%]
+tests/test_summary.py::test_missing_status_is_labelled_unknown PASSED    [ 81%]
+tests/test_summary.py::test_temperature_stats_skip_missing_readings PASSED [ 82%]
+tests/test_summary.py::test_summarize_groups_by_machine_and_battery_in_time_order PASSED [ 83%]
+tests/test_trend.py::test_daily_health_takes_the_median_of_each_utc_day PASSED [ 83%]
+tests/test_trend.py::test_trend_requires_minimum_days PASSED             [ 84%]
+tests/test_trend.py::test_flat_series_reports_no_trend_and_no_projection PASSED [ 85%]
+tests/test_trend.py::test_declining_series_recovers_slope_and_projects_threshold PASSED [ 85%]
+tests/test_trend.py::test_rising_series_is_not_projected PASSED          [ 86%]
+tests/test_trend.py::test_battery_already_below_threshold_has_no_projection PASSED [ 87%]
+tests/test_trend.py::test_projection_beyond_horizon_is_withheld PASSED   [ 87%]
+tests/test_trend.py::test_sampled_trend_is_reproducible_for_a_seed PASSED [ 88%]
+tests/test_trend.py::test_estimated_fade_stays_near_truth PASSED         [ 89%]
+tests/test_trend.py::test_simulation_is_deterministic PASSED             [ 89%]
+tests/test_trend.py::test_simulation_rejects_empty_runs[arguments0] PASSED [ 90%]
+tests/test_trend.py::test_simulation_rejects_empty_runs[arguments1] PASSED [ 90%]
+tests/test_trend.py::test_simulated_machine_is_always_labelled PASSED    [ 91%]
+tests/test_trend.py::test_cli_simulate_then_trend PASSED                 [ 92%]
+tests/test_trend.py::test_cli_trend_json_is_valid PASSED                 [ 92%]
+tests/test_trend.py::test_cli_trend_reports_insufficient_data PASSED     [ 93%]
+tests/test_trend.py::test_cli_trend_without_samples_fails PASSED         [ 94%]
+tests/test_trend.py::test_simulate_refuses_to_touch_an_existing_log PASSED [ 94%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments0] PASSED [ 95%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments1] PASSED [ 96%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments2] PASSED [ 96%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments3] PASSED [ 97%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments4] PASSED [ 98%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments5] PASSED [ 98%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments6] PASSED [ 99%]
+tests/test_trend.py::test_cli_rejects_invalid_numbers[arguments7] PASSED [100%]
+
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.14.3-final-0 ________________
+
+Name                                  Stmts   Miss Branch BrPart  Cover
+-----------------------------------------------------------------------
+battery_lab/__init__.py                  18      0      0      0   100%
+battery_lab/__main__.py                   3      3      2      0     0%
+battery_lab/analysis/__init__.py          0      0      0      0   100%
+battery_lab/analysis/robust.py          112      1     34      1    99%
+battery_lab/analysis/summary.py          53      1     18      1    97%
+battery_lab/analysis/trend.py            54      0     14      0   100%
+battery_lab/cli/__init__.py               3      0      0      0   100%
+battery_lab/cli/app.py                  133      4     32      3    96%
+battery_lab/cli/render.py                89      3     26      2    94%
+battery_lab/models.py                    93      1      4      0    99%
+battery_lab/readers/__init__.py          16      0      2      0   100%
+battery_lab/readers/dmi.py               26      0     12      1    97%
+battery_lab/readers/power_supply.py      39      2     12      0    96%
+battery_lab/readers/thermal.py           13      2      0      0    85%
+battery_lab/simulation/__init__.py        0      0      0      0   100%
+battery_lab/simulation/synthetic.py      19      0      4      0   100%
+battery_lab/storage/__init__.py           7      0      0      0   100%
+battery_lab/storage/csv_store.py        139      5     24      0    97%
+-----------------------------------------------------------------------
+TOTAL                                   817     22    184      8    97%
+============================= 155 passed in 3.91s ==============================

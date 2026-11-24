@@ -1,0 +1,15 @@
+data/*.csv
+.env
+__pycache__/
+*.pyc
+venv/
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml

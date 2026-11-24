@@ -1,0 +1,6 @@
+seed=2026 runs=2000 series_length=60 nominal_alpha=0.05
+white noise false positive rate: 0.040
+95% interval coverage, linear signal with white noise: 0.956
+AR(1) rho=0.3: false positive rate uncorrected 0.143, Hamed-Rao corrected 0.107
+AR(1) rho=0.6: false positive rate uncorrected 0.302, Hamed-Rao corrected 0.167
+AR(1) rho=0.9: false positive rate uncorrected 0.628, Hamed-Rao corrected 0.328
