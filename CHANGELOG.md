@@ -25,11 +25,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Breaking:** text cells that could be read as spreadsheet formulas are escaped in the CSV.
 - CI pins actions to commits, installs hash-locked tools and runs lint, types, tests and an audit.
 
+### Fixed
+
+- `trend` takes its direction from the Mann-Kendall statistic, so a significant decline with a
+  zero median slope is no longer labelled `rising`.
+- Migrating a symlinked log keeps the link and updates its target.
+
 ### Security
 
 - New logs are private (`0600`), appends are locked and migration uses a unique staging file.
-- Terminal output strips control characters from firmware and log strings.
-- Malformed input can no longer crash a run with an unhandled exception.
+- `simulate` creates its file exclusively and never writes through a symlink.
+- A row truncated inside a quoted cell no longer swallows later rows.
+- Terminal output strips control characters and Unicode line separators.
+- Oversized integers, out-of-range timestamps, closed pipes and non-UTF-8 terminals are handled
+  without a traceback.
 - Removed personal contact details and a real device identifier from the current tree.
 
 ## [0.1.0] - 2026-09-14
@@ -48,5 +57,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   desktop without a battery, and a malformed `uevent`.
 
 [Unreleased]: https://github.com/juanmafx/battery-lab/compare/v0.1.0...HEAD
-[1.0.0]: https://github.com/juanmafx/battery-lab/compare/v0.1.0...modernize/2026
+[1.0.0]: https://github.com/juanmafx/battery-lab/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/juanmafx/battery-lab/releases/tag/v0.1.0

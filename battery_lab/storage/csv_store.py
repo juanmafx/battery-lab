@@ -7,18 +7,27 @@ import stat
 import tempfile
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from battery_lab.models import CORE_FIELDS, NUMERIC_FIELDS, RECORD_FIELDS, TEXT_FIELDS, BatterySample, FieldValue
+from battery_lab.models import (
+    CORE_FIELDS,
+    NUMERIC_FIELDS,
+    RECORD_FIELDS,
+    TEXT_FIELDS,
+    BatterySample,
+    FieldValue,
+    parse_bounded_int,
+)
 from battery_lab.storage import StorageError
 
 HEADER = list(RECORD_FIELDS)
 ESCAPED_FIELDS = TEXT_FIELDS | {"machine_id", "battery"}
-FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r", "\n")
 ESCAPE_MARK = "'"
 READ_ERRORS = (OSError, csv.Error, UnicodeError)
+READ_CHUNK_BYTES = 65_536
 
 
 class CsvStore:
@@ -28,19 +37,33 @@ class CsvStore:
     def append(self, samples: Iterable[BatterySample]) -> None:
         rows = [to_row(sample) for sample in samples]
         try:
-            self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            make_private_dirs(self.path.parent)
             with self.locked():
                 existing = self.header()
                 if existing is not None and existing != HEADER:
                     self.migrate(existing)
                 descriptor = os.open(self.path, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_CLOEXEC, 0o600)
                 with os.fdopen(descriptor, "a", newline="", encoding="utf-8") as handle:
-                    if self.lacks_final_newline():
-                        handle.write("\r\n")
+                    handle.write(self.repair_suffix())
                     writer = csv.DictWriter(handle, fieldnames=HEADER)
                     if existing is None:
                         writer.writeheader()
                     writer.writerows(rows)
+        except READ_ERRORS as error:
+            raise StorageError(f"cannot write {self.path}: {error}") from error
+
+    def create(self, samples: Iterable[BatterySample]) -> None:
+        rows = [to_row(sample) for sample in samples]
+        try:
+            make_private_dirs(self.path.parent)
+            try:
+                descriptor = os.open(self.path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_CLOEXEC, 0o600)
+            except FileExistsError as error:
+                raise StorageError(f"{self.path} already exists; refusing to overwrite it") from error
+            with os.fdopen(descriptor, "w", newline="", encoding="utf-8") as handle:
+                writer = csv.DictWriter(handle, fieldnames=HEADER)
+                writer.writeheader()
+                writer.writerows(rows)
         except READ_ERRORS as error:
             raise StorageError(f"cannot write {self.path}: {error}") from error
 
@@ -62,12 +85,16 @@ class CsvStore:
         except FileNotFoundError:
             return None
 
-    def lacks_final_newline(self) -> bool:
+    def repair_suffix(self) -> str:
         with self.path.open("rb") as handle:
             if handle.seek(0, os.SEEK_END) == 0:
-                return False
+                return ""
             handle.seek(-1, os.SEEK_END)
-            return handle.read(1) != b"\n"
+            if handle.read(1) == b"\n":
+                return ""
+            handle.seek(0)
+            quotes = sum(chunk.count(b'"') for chunk in iter(lambda: handle.read(READ_CHUNK_BYTES), b""))
+        return '"\r\n' if quotes % 2 else "\r\n"
 
     @contextmanager
     def locked(self) -> Iterator[None]:
@@ -85,8 +112,9 @@ class CsvStore:
             rows = list(csv.DictReader(handle))
         if any(None in row for row in rows):
             raise StorageError(f"{self.path} has rows longer than its header; refusing to migrate")
-        mode = stat.S_IMODE(self.path.stat().st_mode)
-        descriptor, staging = tempfile.mkstemp(dir=self.path.parent, prefix=f".{self.path.name}.", suffix=".tmp")
+        target = self.path.resolve()
+        mode = stat.S_IMODE(target.stat().st_mode)
+        descriptor, staging = tempfile.mkstemp(dir=target.parent, prefix=f".{target.name}.", suffix=".tmp")
         try:
             with os.fdopen(descriptor, "w", newline="", encoding="utf-8") as handle:
                 writer = csv.DictWriter(handle, fieldnames=HEADER, restval="")
@@ -95,10 +123,19 @@ class CsvStore:
                 handle.flush()
                 os.fsync(handle.fileno())
                 os.fchmod(handle.fileno(), mode)
-            os.replace(staging, self.path)
+            os.replace(staging, target)
         except BaseException:
             Path(staging).unlink(missing_ok=True)
             raise
+
+
+def make_private_dirs(directory: Path) -> None:
+    missing = []
+    while not directory.exists():
+        missing.append(directory)
+        directory = directory.parent
+    for path in reversed(missing):
+        path.mkdir(mode=0o700, exist_ok=True)
 
 
 def escape_cell(value: str) -> str:
@@ -134,7 +171,7 @@ def from_row(row: dict[str, str | None]) -> BatterySample | None:
     values: dict[str, Any] = {}
     for name in CORE_FIELDS:
         cell = row.get(name) or None
-        values[name] = parse_cell_int(cell) if name in NUMERIC_FIELDS else text_cell(cell)
+        values[name] = parse_bounded_int(cell) if name in NUMERIC_FIELDS else text_cell(cell)
     return BatterySample(
         machine_id=text_cell(row.get("machine_id")) or "unknown",
         timestamp=timestamp,
@@ -148,15 +185,10 @@ def from_row(row: dict[str, str | None]) -> BatterySample | None:
 def parse_timestamp(value: str | None) -> datetime | None:
     try:
         moment = datetime.fromisoformat(value or "")
-        return moment if moment.tzinfo else moment.astimezone()
+        aware = moment if moment.tzinfo else moment.astimezone()
+        aware.astimezone(UTC)
+        return aware
     except (ValueError, OverflowError, OSError):
-        return None
-
-
-def parse_cell_int(value: str | None) -> int | None:
-    try:
-        return int(value) if value is not None else None
-    except ValueError:
         return None
 
 

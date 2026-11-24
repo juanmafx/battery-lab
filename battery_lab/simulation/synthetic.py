@@ -6,6 +6,7 @@ from battery_lab.analysis.trend import DAYS_PER_YEAR
 from battery_lab.models import BatterySample
 
 DESIGN_CAPACITY_UAH = 3_534_000
+MAX_SIMULATION_DAYS = 36_525
 SIMULATION_START = datetime(2026, 1, 1, tzinfo=UTC)
 STATUS_CYCLE = ("Charging", "Not charging", "Discharging")
 
@@ -20,6 +21,8 @@ def simulate_samples(
 ) -> list[BatterySample]:
     if days < 1 or samples_per_day < 1:
         raise ValueError("days and samples_per_day must be at least 1")
+    if days > MAX_SIMULATION_DAYS:
+        raise ValueError(f"days must be at most {MAX_SIMULATION_DAYS}")
     generator = random.Random(seed)
     step = timedelta(days=1) / samples_per_day
     samples = []

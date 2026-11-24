@@ -6,9 +6,11 @@ from battery_lab.analysis.summary import UNKNOWN_STATUS
 from battery_lab.analysis.trend import HealthTrend
 from battery_lab.models import BatterySample, BatterySummary
 
+UNSAFE_CATEGORIES = ("C", "Zl", "Zp")
+
 
 def safe_text(value: str) -> str:
-    return "".join("?" if unicodedata.category(char).startswith("C") else char for char in value)
+    return "".join("?" if unicodedata.category(char).startswith(UNSAFE_CATEGORIES) else char for char in value)
 
 
 def status_label(status: str | None) -> str:

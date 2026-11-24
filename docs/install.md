@@ -64,9 +64,9 @@ Sample every 5 minutes (`crontab -e`):
 */5 * * * * /path/to/battery-lab/.venv/bin/battery-lab collect >/dev/null 2>>"$HOME/.battery-lab.err"
 ```
 
-**Existing cron lines keep working.** `collect.py` at the repository root is a thin shim over the
-package: it needs no install, and it maps the old `--json` and `--show` flags to the new commands.
-A bare `collect.py` still means `collect`.
+**Existing cron lines keep working if their interpreter is Python 3.11 or newer.** `collect.py` at
+the repository root is a thin shim over the package: it needs no install, and it maps the old
+`--json` and `--show` flags to the new commands. A bare `collect.py` still means `collect`.
 
 ```cron
 */5 * * * * /usr/bin/python3 /path/to/battery-lab/collect.py >/dev/null 2>>"$HOME/.battery-lab.err"

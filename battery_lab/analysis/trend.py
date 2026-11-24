@@ -65,14 +65,17 @@ def project_crossing(
     offsets = [drop / (rate / DAYS_PER_YEAR) for rate in (slope, lower, upper)]
     if max(offsets) > MAX_PROJECTION_DAYS:
         return None
-    estimate, earliest, latest = (last_day + timedelta(days=round(offset)) for offset in offsets)
+    try:
+        estimate, earliest, latest = (last_day + timedelta(days=round(offset)) for offset in offsets)
+    except OverflowError:
+        return None
     return ThresholdCrossing(estimate=estimate, earliest=earliest, latest=latest)
 
 
-def classify(test: MannKendall, slope: float, confidence: float) -> str:
+def classify(test: MannKendall, confidence: float) -> str:
     if test.p_value >= 1 - confidence:
         return "no statistically significant trend"
-    return "declining" if slope < 0 else "rising"
+    return "declining" if test.s < 0 else "rising"
 
 
 def health_trend(
@@ -95,7 +98,7 @@ def health_trend(
     intercept = median(values) - slope * median(times)
     fitted_last = intercept + slope * times[-1]
     yearly = (slope * DAYS_PER_YEAR, lower * DAYS_PER_YEAR, upper * DAYS_PER_YEAR)
-    verdict = classify(test, slope, confidence)
+    verdict = classify(test, confidence)
     crossing = None
     if verdict == "declining":
         crossing = project_crossing(daily[-1][0], fitted_last, threshold_pct, *yearly)

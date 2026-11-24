@@ -162,3 +162,8 @@ def test_sysfs_paths_appear_only_as_default_arguments():
             if is_sysfs_path and id(node) not in allowed:
                 offenders.append(f"{source.relative_to(PACKAGE)}:{node.lineno}")
     assert offenders == []
+
+
+def test_unicode_line_separators_cannot_inject_uevent_fields():
+    fields = parse_uevent("POWER_SUPPLY_MODEL_NAME=a\x85POWER_SUPPLY_STATUS=Full\u2028POWER_SUPPLY_CAPACITY=1")
+    assert set(fields) == {"model_name"}

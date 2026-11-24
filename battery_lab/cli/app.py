@@ -1,4 +1,5 @@
 import argparse
+import io
 import json
 import math
 import os
@@ -12,9 +13,11 @@ from battery_lab.analysis.summary import summarize
 from battery_lab.analysis.trend import DEFAULT_SEED, DEFAULT_THRESHOLD_PCT, MIN_TREND_DAYS, daily_health, health_trend
 from battery_lab.cli.render import join_blocks, render_sample, render_summary, render_trend
 from battery_lab.models import BatterySample
-from battery_lab.simulation.synthetic import simulate_samples
+from battery_lab.simulation.synthetic import MAX_SIMULATION_DAYS, simulate_samples
 from battery_lab.storage import SampleStore, StorageError
 from battery_lab.storage.csv_store import CsvStore
+
+EXIT_BROKEN_PIPE = 141
 
 
 def default_home() -> Path:
@@ -51,7 +54,7 @@ def percentage(text: str) -> float:
 
 def confidence_level(text: str) -> float:
     value = finite_float(text)
-    if not 0 < value < 1:
+    if not 0 < value < 1 or (1 + value) / 2 >= 1:
         raise argparse.ArgumentTypeError(f"must be between 0 and 1: {text}")
     return value
 
@@ -63,6 +66,13 @@ def positive_int(text: str) -> int:
         raise argparse.ArgumentTypeError(f"not an integer: {text}") from error
     if value < 1:
         raise argparse.ArgumentTypeError(f"must be 1 or greater: {text}")
+    return value
+
+
+def simulation_days(text: str) -> int:
+    value = positive_int(text)
+    if value > MAX_SIMULATION_DAYS:
+        raise argparse.ArgumentTypeError(f"must be at most {MAX_SIMULATION_DAYS}: {text}")
     return value
 
 
@@ -97,7 +107,7 @@ def build_parser() -> argparse.ArgumentParser:
     simulate = commands.add_parser("simulate", help="write a labelled synthetic log to a new file")
     simulate.add_argument("--output", type=Path, required=True, metavar="PATH", help="new CSV to create; an existing file is refused")
     simulate.add_argument("--seed", type=int, default=DEFAULT_SEED, help="random seed (default: %(default)s)")
-    simulate.add_argument("--days", type=positive_int, default=365, help="days to simulate (default: %(default)s)")
+    simulate.add_argument("--days", type=simulation_days, default=365, help="days to simulate (default: %(default)s)")
     simulate.add_argument("--start-health", type=percentage, default=90.0, metavar="PCT", help="initial health (default: %(default)s)")
     simulate.add_argument("--fade", type=finite_float, default=4.0, metavar="PP", help="health loss in pp/year (default: %(default)s)")
     simulate.add_argument("--noise", type=non_negative_float, default=0.15, metavar="PP", help="reading noise in pp (default: %(default)s)")
@@ -106,21 +116,39 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    tolerate_unencodable_output()
     try:
-        if args.command == "show":
-            return show(CsvStore(args.data), args.data)
-        if args.command == "trend":
-            return trend(CsvStore(args.data), args)
-        if args.command == "simulate":
-            return simulate(args)
-        samples = collect_samples(args.sysfs_root, args.env_file)
-        if args.command == "json":
-            print(json.dumps([sample.to_record() for sample in samples], indent=2))
-            return 0 if samples else 1
-        return collect(samples, CsvStore(args.data), args.data, args.sysfs_root)
+        status = dispatch(args)
+        sys.stdout.flush()
+        return status
     except StorageError as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
+    except BrokenPipeError:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        os.close(devnull)
+        return EXIT_BROKEN_PIPE
+
+
+def tolerate_unencodable_output() -> None:
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(errors="backslashreplace")
+
+
+def dispatch(args: argparse.Namespace) -> int:
+    if args.command == "show":
+        return show(CsvStore(args.data), args.data)
+    if args.command == "trend":
+        return trend(CsvStore(args.data), args)
+    if args.command == "simulate":
+        return simulate(args)
+    samples = collect_samples(args.sysfs_root, args.env_file)
+    if args.command == "json":
+        print(json.dumps([sample.to_record() for sample in samples], indent=2))
+        return 0 if samples else 1
+    return collect(samples, CsvStore(args.data), args.data, args.sysfs_root)
 
 
 def collect(samples: list[BatterySample], store: SampleStore, destination: Path, sysfs_root: Path) -> int:
@@ -175,9 +203,6 @@ def trend(store: SampleStore, args: argparse.Namespace) -> int:
 
 
 def simulate(args: argparse.Namespace) -> int:
-    if args.output.exists():
-        print(f"error: {args.output} already exists; simulate only creates new files", file=sys.stderr)
-        return 1
     samples = simulate_samples(
         seed=args.seed,
         days=args.days,
@@ -185,6 +210,6 @@ def simulate(args: argparse.Namespace) -> int:
         fade_pp_per_year=args.fade,
         noise_pp=args.noise,
     )
-    CsvStore(args.output).append(samples)
+    CsvStore(args.output).create(samples)
     print(f"wrote {len(samples)} synthetic samples for {samples[0].machine_id} -> {args.output}")
     return 0

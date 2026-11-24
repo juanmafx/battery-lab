@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from battery_lab.models import parse_bounded_int
+
 MAX_ATTRIBUTE_CHARS = 65_536
 
 
@@ -13,9 +15,4 @@ def read_text(path: Path) -> str | None:
 
 
 def parse_int(value: str | None) -> int | None:
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except ValueError:
-        return None
+    return parse_bounded_int(value)

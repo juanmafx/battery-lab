@@ -1,7 +1,11 @@
 import csv
 import multiprocessing
+import os
 import stat
-from datetime import UTC, datetime
+import subprocess
+import sys
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 from hypothesis import HealthCheck, given, settings
@@ -15,6 +19,7 @@ from battery_lab.readers.power_supply import normalize
 from battery_lab.storage import StorageError
 from battery_lab.storage.csv_store import HEADER, CsvStore, escape_cell, parse_extra, parse_timestamp, unescape_cell
 
+ROOT = Path(__file__).resolve().parents[1]
 MOMENT = datetime(2026, 1, 1, tzinfo=UTC)
 LEGACY_HEADER = [name for name in HEADER if name != "temp_c"]
 
@@ -25,7 +30,7 @@ def write_rows(path, count):
         store.append([BatterySample("M", MOMENT.replace(minute=index % 60), "BAT0", capacity=index % 100)])
 
 
-@pytest.mark.parametrize("payload", ["=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx"])
+@pytest.mark.parametrize("payload", ["=1+1", "+1", "-1", "@SUM(A1)", "\tx", "\rx", "\nx"])
 def test_formula_cells_are_neutralized_on_disk_and_restored(tmp_path, payload):
     store = CsvStore(tmp_path / "battery.csv")
     sample = BatterySample(payload, MOMENT, "BAT0", model_name=payload, manufacturer=payload)
@@ -177,3 +182,123 @@ def test_append_to_a_directory_is_a_clean_error(tmp_path):
 def test_serial_from_dmi_is_absent_from_records(fake_sys, capsys, tmp_path):
     assert main(["json", "--sysfs-root", str(fake_sys("dell_latitude_3410")), "--env-file", str(tmp_path / ".env")]) == 0
     assert "ROOT-ONLY" not in capsys.readouterr().out
+
+
+def write_cells(path, rows):
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(handle, fieldnames=HEADER, restval="")
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def cell_row(day, **cells):
+    stamp = (MOMENT + timedelta(days=day)).isoformat()
+    return {"machine_id": "M", "timestamp": stamp, "battery": "BAT0", "charge_full": 90, "charge_full_design": 100, **cells}
+
+
+@pytest.mark.parametrize("column", ["charge_full", "voltage_now", "current_now", "capacity"])
+@pytest.mark.parametrize("command", ["show", "trend"])
+def test_oversized_integer_cells_are_null_and_do_not_crash(tmp_path, capsys, column, command):
+    data = tmp_path / "battery.csv"
+    write_cells(data, [cell_row(day, **{column: "9" * 400}) for day in range(12)])
+    assert main([command, "--data", str(data)]) == 0
+    assert getattr(CsvStore(data).load()[0], column) is None
+    capsys.readouterr()
+
+
+def test_oversized_integer_in_a_numeric_uevent_field_is_null():
+    assert normalize("charge_full", "9" * 400) is None
+    assert normalize("charge_full", str(2**63 - 1)) == 2**63 - 1
+
+
+@pytest.mark.parametrize("value", ["0001-01-01T00:00:00+14:00", "9999-12-31T23:59:59-14:00"])
+def test_timestamps_outside_the_utc_range_are_rejected(tmp_path, capsys, value):
+    assert parse_timestamp(value) is None
+    data = tmp_path / "battery.csv"
+    write_cells(data, [*[cell_row(day) for day in range(11)], cell_row(0, timestamp=value)])
+    assert main(["trend", "--data", str(data)]) == 0
+    capsys.readouterr()
+
+
+def test_truncation_inside_a_quoted_cell_keeps_later_rows(tmp_path):
+    store = CsvStore(tmp_path / "battery.csv")
+    sample = BatterySample("M", MOMENT, "BAT0", extra={"first": "x", "second": "y"})
+    store.append([sample, sample])
+    store.path.write_bytes(store.path.read_bytes().rstrip(b"\r\n")[:-5])
+    store.append([BatterySample("AFTER", MOMENT, "BAT0")])
+    store.append([BatterySample("LAST", MOMENT, "BAT0")])
+    assert [item.machine_id for item in store.load()] == ["M", "M", "AFTER", "LAST"]
+
+
+def test_simulate_does_not_write_through_a_dangling_symlink(tmp_path, capsys):
+    victim = tmp_path / "victim.csv"
+    link = tmp_path / "link.csv"
+    link.symlink_to(victim)
+    assert main(["simulate", "--output", str(link), "--days", "1"]) == 1
+    assert not victim.exists()
+    assert "already exists" in capsys.readouterr().err
+
+
+def test_simulated_log_is_private(tmp_path, capsys):
+    data = tmp_path / "new" / "synthetic.csv"
+    assert main(["simulate", "--output", str(data), "--days", "1"]) == 0
+    assert stat.S_IMODE(data.stat().st_mode) == 0o600
+    capsys.readouterr()
+
+
+def test_migration_through_a_symlink_updates_the_target(tmp_path):
+    target = tmp_path / "real.csv"
+    target.write_text(",".join(LEGACY_HEADER) + "\r\n")
+    link = tmp_path / "link.csv"
+    link.symlink_to(target)
+    CsvStore(link).append([BatterySample("M", MOMENT, "BAT0")])
+    assert link.is_symlink()
+    assert [sample.machine_id for sample in CsvStore(target).load()] == ["M"]
+
+
+def test_every_new_parent_directory_is_private(tmp_path):
+    previous = os.umask(0o022)
+    try:
+        CsvStore(tmp_path / "a" / "b" / "c" / "battery.csv").append([BatterySample("M", MOMENT, "BAT0")])
+    finally:
+        os.umask(previous)
+    for relative in ("a", "a/b", "a/b/c"):
+        assert stat.S_IMODE((tmp_path / relative).stat().st_mode) == 0o700
+
+
+@pytest.mark.parametrize("separator", ["\u2028", "\u2029", "\x85"])
+def test_unicode_line_separators_are_removed_from_terminal_output(separator):
+    assert separator not in safe_text(f"a{separator}b")
+
+
+def test_show_survives_a_terminal_that_cannot_encode_the_output(tmp_path):
+    data = tmp_path / "battery.csv"
+    CsvStore(data).append([BatterySample("M", MOMENT, "BAT0", model_name="\u03a9mega", temp_c=40.5)])
+    result = subprocess.run(
+        [sys.executable, "-m", "battery_lab", "show", "--data", str(data)],
+        cwd=ROOT,
+        capture_output=True,
+        env={**os.environ, "PYTHONIOENCODING": "ascii"},
+        check=False,
+    )
+    assert result.returncode == 0
+    assert b"Traceback" not in result.stderr
+
+
+def test_closed_output_pipe_is_not_a_traceback(tmp_path):
+    data = tmp_path / "battery.csv"
+    CsvStore(data).append([BatterySample(f"M{index}", MOMENT, "BAT0") for index in range(3000)])
+    read_end, write_end = os.pipe()
+    os.close(read_end)
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "battery_lab", "show", "--data", str(data)],
+            cwd=ROOT,
+            stdout=write_end,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    finally:
+        os.close(write_end)
+    assert result.returncode == 141
+    assert b"Traceback" not in result.stderr

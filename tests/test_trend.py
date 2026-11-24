@@ -149,9 +149,11 @@ def test_simulate_refuses_to_touch_an_existing_log(tmp_path, capsys):
     [
         ["trend", "--confidence", "1.5"],
         ["trend", "--confidence", "nan"],
+        ["trend", "--confidence", "0.9999999999999999"],
         ["trend", "--threshold", "0"],
         ["simulate", "--output", "x", "--days", "0"],
         ["simulate", "--output", "x", "--days", "many"],
+        ["simulate", "--output", "x", "--days", "36526"],
         ["simulate", "--output", "x", "--noise", "-1"],
         ["simulate", "--output", "x", "--fade", "inf"],
         ["simulate", "--output", "x", "--fade", "fast"],
@@ -161,3 +163,16 @@ def test_cli_rejects_invalid_numbers(arguments):
     with pytest.raises(SystemExit) as exit_info:
         main(arguments)
     assert exit_info.value.code == 2
+
+
+def test_significant_step_down_with_a_flat_median_slope_is_declining():
+    result = health_trend(daily_samples(([90.0, 90.0, 90.0, 89.0] * 6)[:21] + [89.0] * 9))
+    assert result.slope_pp_per_year == 0
+    assert result.mann_kendall.s < 0
+    assert result.mann_kendall.p_value < 0.05
+    assert result.verdict == "declining"
+    assert result.crossing is None
+
+
+def test_projection_past_the_calendar_limit_is_omitted():
+    assert project_crossing(date(9999, 12, 1), 90.0, 70.0, -1.0, -2.0, -0.5) is None

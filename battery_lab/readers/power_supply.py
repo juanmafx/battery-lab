@@ -19,7 +19,7 @@ def battery_dirs(sysfs_root: Path = Path("/sys")) -> list[Path]:
 
 def parse_uevent(text: str | None) -> dict[str, str | None]:
     fields: dict[str, str | None] = {}
-    for line in (text or "").splitlines():
+    for line in (text or "").split("\n"):
         key, separator, value = line.partition("=")
         key = key.strip()
         if not separator or not key:

@@ -20,13 +20,17 @@ works on hardware other than the test bench. The tests cover a Dell, an HP that 
 | `temp_c` | Hottest usable thermal zone from `/sys/class/thermal/thermal_zone*/temp`, in °C |
 | `extra` | Every other `uevent` key, as JSON |
 
-A missing or unreadable field is stored as empty (null). It never crashes the run.
+A missing or unreadable field is stored as empty (null). When reading a log, integers outside the
+signed 64-bit range count as missing, and rows whose timestamp cannot be represented in UTC are
+skipped.
 
-**Formula protection:** text cells beginning with `=`, `+`, `-`, `@`, tab, carriage return or `'`
-are written with a leading `'`, so spreadsheets do not evaluate them. battery-lab removes the mark
-when it reads the file. Numeric columns are never escaped.
+**Formula protection:** text cells beginning with `=`, `+`, `-`, `@`, tab, carriage return, line
+feed or `'` are written with a leading `'`, so spreadsheets do not evaluate them. battery-lab
+removes the mark when it reads the file. Numeric columns are never escaped. Rows written by 0.1.0
+are not escaped, so review an old log before opening it in a spreadsheet.
 
-**File permissions:** new logs are created with mode `0600`. An existing file keeps its mode.
+**File permissions:** new logs are created with mode `0600`, and directories created for them with
+`0700`. An existing file or directory keeps its mode.
 
 **When the CSV header changes:** a file from an older version that lacked a column (such as
 `temp_c`) is rewritten in place with the new header, and old rows get empty values for the new

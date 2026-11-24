@@ -18,8 +18,10 @@ mislead you.
    less conservative.
 5. **Confidence interval.** The rank-based interval for the Sen slope, using the corrected
    variance, with linear interpolation between order statistics.
-6. **Projection.** Only for a statistically significant decline, the fitted line is extended to
-   the threshold. The range comes from the slope interval alone.
+6. **Verdict.** The direction comes from the sign of the Mann-Kendall statistic. Step-like data
+   can show a significant decline while the median slope is exactly zero.
+7. **Projection.** Only for a significant decline whose slope and upper bound are both negative, the
+   fitted line is extended to the threshold. The range comes from the slope interval alone.
 
 ## Complexity
 

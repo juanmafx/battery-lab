@@ -9,9 +9,9 @@
 
 ## Reporting a vulnerability
 
-Please use GitHub's private vulnerability reporting on this repository (Security tab, "Report a
-vulnerability"). Do not open a public issue for a suspected vulnerability. This is a personal
-project maintained on a best-effort basis, so no response time is guaranteed.
+Do not post vulnerability details in a public issue. Open an issue that only asks for a private
+contact channel, and share the details once one is agreed. This is a personal project maintained
+on a best-effort basis, so no response time is guaranteed.
 
 ## Security model
 

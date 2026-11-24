@@ -28,6 +28,18 @@ CORE_FIELDS = (
 TEXT_FIELDS = frozenset({"status", "capacity_level", "technology", "model_name", "manufacturer", "serial_number"})
 NUMERIC_FIELDS = frozenset(CORE_FIELDS) - TEXT_FIELDS
 RECORD_FIELDS = ("machine_id", "timestamp", "battery", *CORE_FIELDS, "health_pct", "temp_c", "extra")
+INT64_MIN = -(2**63)
+INT64_MAX = 2**63 - 1
+
+
+def parse_bounded_int(value: str | None) -> int | None:
+    if value is None:
+        return None
+    try:
+        number = int(value)
+    except ValueError:
+        return None
+    return number if INT64_MIN <= number <= INT64_MAX else None
 
 
 @dataclass(frozen=True)

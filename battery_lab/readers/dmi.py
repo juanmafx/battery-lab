@@ -9,7 +9,7 @@ IDENTITY_FIELDS = ("product_name", "product_sku")
 
 def read_env(path: Path) -> dict[str, str]:
     values: dict[str, str] = {}
-    for line in (read_text(path) or "").splitlines():
+    for line in (read_text(path) or "").split("\n"):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
