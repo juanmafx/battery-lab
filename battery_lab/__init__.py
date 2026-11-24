@@ -10,7 +10,7 @@ from battery_lab.readers.thermal import max_temp_c
 from battery_lab.storage import SampleStore, StorageError
 from battery_lab.storage.csv_store import CsvStore
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 __all__ = [
     "BatterySample",

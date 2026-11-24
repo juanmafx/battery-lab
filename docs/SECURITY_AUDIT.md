@@ -37,13 +37,13 @@ tool with no web interface, accounts, network access or stored credentials.
 | Low | Availability | Attribute reads were unbounded | Reads are capped at 64 KiB |
 | Low | Privacy | A real device identifier appeared in a test and a figure | Replaced with synthetic values |
 | Low | Privacy | Personal contact details were published in the README | Removed from the current tree |
+| Low | Privacy | Personal contact details and a device identifier remained in git history | Resolved by the 2026-11-24 history rewrite. Treat them as already public, because they were published before it |
 | Low | Supply chain | CI used mutable action tags and unpinned tools on end-of-life Python 3.9 | Actions pinned to commits, tools hash-locked, Python 3.11 to 3.14 |
 
 ## Open
 
 | Severity | Issue | Required action |
 |---|---|---|
-| Low | Personal contact details and a device identifier remain in git history, and on the default branch until this work is merged | Owner decides whether to rewrite history. Treat them as already public |
 | Low | Rows written by 0.1.0 are not escaped, so a formula-like cell in an old log stays live in a spreadsheet | Review old logs before opening them in a spreadsheet |
 | Low | The private vulnerability reporting feature is disabled on the repository | Owner can enable it in the repository settings |
 | Info | Logs created by earlier versions keep their existing permissions | Run `chmod 600` on existing logs |

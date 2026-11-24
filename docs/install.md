@@ -4,7 +4,7 @@ This page covers installing battery-lab, its commands, cron, and where its files
 
 ## Install
 
-Current version: **1.0.0**. Release notes are in [CHANGELOG.md](../CHANGELOG.md).
+Current version: **1.0.1**. Release notes are in [CHANGELOG.md](../CHANGELOG.md).
 
 Python 3.11+. No runtime dependencies: standard library only.
 

@@ -1,6 +1,6 @@
 battery-lab test report
-generated_utc: 2026-11-24T02:41:39Z
-base_commit: fb85d3d
+generated_utc: 2026-11-24T22:56:13Z
+base_commit: 424eb36
 python: 3.12.15
 pytest: 9.2.0
 hypothesis_seed: 2026
@@ -217,4 +217,4 @@ battery_lab/storage/__init__.py           7      0      0      0   100%
 battery_lab/storage/csv_store.py        162      6     28      0    97%
 -----------------------------------------------------------------------
 TOTAL                                   915     29    194      9    96%
-============================= 182 passed in 8.33s ==============================
+============================= 182 passed in 10.29s =============================

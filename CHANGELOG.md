@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - Unreleased
+## [1.0.1] - 2026-11-24
+
+### Changed
+
+- Corrected the release notes, changelog links, security audit and committed test reports to
+  reflect the published 1.0.0 release and the rewritten repository history. Documentation only,
+  no change in code behaviour.
+
+## [1.0.0] - 2026-11-24
 
 ### Added
 
@@ -41,7 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a traceback.
 - Removed personal contact details and a real device identifier from the current tree.
 
-## [0.1.0] - 2026-09-14
+## 0.1.0 - 2026-09-14
+
+This version predates the rewritten repository history. Its tag and commits are no longer published.
 
 ### Added
 
@@ -56,6 +66,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 58 tests with synthetic sysfs fixtures: Dell, HP with `energy_*` fields, dual-battery ThinkPad,
   desktop without a battery, and a malformed `uevent`.
 
-[Unreleased]: https://github.com/juanmafx/battery-lab/compare/v0.1.0...HEAD
-[1.0.0]: https://github.com/juanmafx/battery-lab/compare/v0.1.0...v1.0.0
-[0.1.0]: https://github.com/juanmafx/battery-lab/releases/tag/v0.1.0
+[Unreleased]: https://github.com/juanmafx/battery-lab/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/juanmafx/battery-lab/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/juanmafx/battery-lab/releases/tag/v1.0.0
